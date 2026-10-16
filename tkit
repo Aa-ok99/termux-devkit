@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# =============================================================
+#  tkit - Termux DevKit
+#  Turn Termux into a complete development workstation.
+# =============================================================
+set -o pipefail
+TKIT_VERSION="1.0.0"
+TKIT_REPO="https://github.com/Aa-ok99/termux-devkit"
+
+# Resolve real location (follows symlinks)
+SRC="${BASH_SOURCE[0]}"
+while [ -L "$SRC" ]; do
+  DIR="$(cd -P "$(dirname "$SRC")" && pwd)"
+  SRC="$(readlink "$SRC")"
+  [[ $SRC != /* ]] && SRC="$DIR/$SRC"
+done
+TKIT_ROOT="$(cd -P "$(dirname "$SRC")" && pwd)"
+
+# ---- global flags --------------------------------------------------
+DRY_RUN=0; YES=0; NO_COLOR_FLAG=0; WANT_HELP=0
+ARGS=()
+for a in "$@"; do
+  case "$a" in
+    -y|--yes)      YES=1 ;;
+    -n|--dry-run)  DRY_RUN=1 ;;
+    --no-color)    NO_COLOR_FLAG=1 ;;
+    -h|--help)     WANT_HELP=1 ;;
+    -v|--version)  ARGS+=("version") ;;
+    *)             ARGS+=("$a") ;;
+  esac
+done
+set -- "${ARGS[@]}"
+
+for lib in core ui modules new commands; do
+  # shellcheck disable=SC1090
+  source "$TKIT_ROOT/lib/$lib.sh"
+done
+
+trap 'ui_cursor_show' EXIT
+trap 'ui_cursor_show; jobs -p | xargs -r kill 2>/dev/null; echo; exit 130' INT
+
+cmd="${1:-menu}"; [ $# -gt 0 ] && shift
+
+if (( WANT_HELP )); then cmd_help "$cmd"; exit 0; fi
+
+case "$cmd" in
+  menu)                        cmd_menu ;;
+  install|add|i)               cmd_install "$@" ;;
+  remove|rm|uninstall)         cmd_remove "$@" ;;
+  list|ls|status)              cmd_list "$@" ;;
+  info)                        cmd_info "$@" ;;
+  search|find)                 cmd_search "$@" ;;
+  profile)                     cmd_profile "$@" ;;
+  new|create)                  cmd_new "$@" ;;
+  doctor)                      cmd_doctor ;;
+  update|upgrade)              cmd_update ;;
+  self-update)                 cmd_self_update ;;
+  log|logs)                    cmd_log "$@" ;;
+  completion)                  cmd_completion ;;
+  version)                     echo "tkit $TKIT_VERSION" ;;
+  help)                        cmd_help "$@" ;;
+  *) ui_err "Unknown command: $cmd"; echo; cmd_help; exit 1 ;;
+esac

@@ -1,0 +1,18 @@
+# Your own module. Copy to ~/.config/tkit/modules/<name>.sh
+# Then:  tkit install <name>
+
+MOD_DESC="Short description"        # shown in lists
+MOD_CAT="Tools"                     # Essentials | Languages | Platforms | Tools
+MOD_DEPS="base"                     # modules to install first (space separated)
+MOD_PKGS="package1 package2"        # Termux packages
+
+# Optional: runs after packages are installed
+# mod_post() { run pip install something; }
+
+# Optional: custom "is it installed?" check (default: all MOD_PKGS present)
+# mod_check() { command -v something >/dev/null; }
+
+# Optional: runs on `tkit remove`
+# mod_remove() { run rm -rf ~/.something; }
+
+# Helpers available: run, confirm, ask, ui_ok, ui_warn, ui_info, ui_err, DRY_RUN, YES
